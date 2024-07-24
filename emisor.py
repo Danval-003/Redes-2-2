@@ -1,21 +1,31 @@
 import numpy as np
 from typing import List
 
-def hamming_encode(data_bits: List[int]) -> List[int]:
-    # Data bits
-    d = data_bits
-    
+def hamming_encode(data_bits: List[int], n: int, r: int) -> List[int]:
     # Initialize parity bits
-    p = [0, 0, 0, 0]
+    p = [0] * r
     
     # Calculate parity bits
-    p[0] = d[0] ^ d[1] ^ d[3] ^ d[4] ^ d[6]
-    p[1] = d[0] ^ d[2] ^ d[3] ^ d[5] ^ d[6]
-    p[2] = d[1] ^ d[2] ^ d[3]
-    p[3] = d[4] ^ d[5] ^ d[6]
+    for i in range(r):
+        parity_position = 2 ** i
+        parity_value = 0
+        for j in range(1, n + 1):
+            if j & parity_position != 0 and (j - 1) < len(data_bits):
+                parity_value ^= data_bits[j - 1]
+        p[i] = parity_value
     
     # Combine data and parity bits
-    encoded = [p[0], p[1], d[0], p[2], d[1], d[2], d[3], p[3], d[4], d[5], d[6]]
+    encoded = []
+    j = 0
+    for i in range(1, n + 1):
+        if i == 2 ** j:
+            encoded.append(p[j])
+            j += 1
+        else:
+            if (i - j - 1) < len(data_bits):
+                encoded.append(data_bits[i - j - 1])
+            else:
+                encoded.append(0)  # Padding if data_bits are exhausted
     return encoded
 
 def trans_bitstr_to_list(bitstr: str) -> List[int]:
@@ -29,35 +39,51 @@ def trans_bitstr_to_list(bitstr: str) -> List[int]:
             exit(f'Invalid character {c} in message')
     return bits
 
-def char_to_7bit_ascii(c: str) -> str:
-    ascii_code = f'{ord(c):07b}'
-    return ascii_code
+def find_optimal_hamming_parameters(m: int):
+    r = 1
+    while (m + r + 1) > 2 ** r:
+        r += 1
+    n = m + r
+    return n, r
 
 # Main program
 if __name__ == "__main__":
-    # Solicitar un mensaje en mayúsculas
-    message = input("Ingrese un mensaje en mayúsculas: ")
-    if not message.isupper():
-        exit("El mensaje debe estar en mayúsculas.")
+    # Solicitar un mensaje en binario
+    binary_message = input("Ingrese un mensaje en binario (solo unos y ceros): ")
+    if not all(c in '01' for c in binary_message):
+        exit("El mensaje debe contener solo '0' y '1'.")
+
+    # Solicitar opción de código a aplicar
+    print("Seleccione el tipo de código a aplicar:")
+    print("1. Hamming(n,m)")
+    print("2. Fletcher Checksum")
+    option = input("Ingrese 1 o 2: ")
     
-    # Convertir cada carácter a su código ASCII de 7 bits y verificar longitud
-    ascii_codes = []
-    for c in message:
-        ascii_code = char_to_7bit_ascii(c)
-        if len(ascii_code) != 7:
-            exit(f"Error: Código ASCII de {c} no tiene 7 bits.")
-        print(f'Carácter: {c} -> ASCII: {ascii_code}')
-        ascii_codes.append(ascii_code)
+    if option == "1":
+        # Obtener la longitud de la entrada binaria
+        m = len(binary_message)
+        
+        # Calcular los valores óptimos de n y r
+        n, r = find_optimal_hamming_parameters(m)
+        print(f'Valores óptimos: n = {n}, m = {m}, r = {r}')
+        
+        # Dividir el mensaje en bloques de m bits
+        blocks = [binary_message[i:i+m] for i in range(0, len(binary_message), m)]
+        print(f'Bloques de {m} bits: {blocks}')
+        
+        # Encodificar cada bloque con Hamming
+        hamming_codes = []
+        for block in blocks:
+            data_bits = trans_bitstr_to_list(block)
+            encoded_bits = hamming_encode(data_bits, n, r)
+            encoded_str = ''.join(map(str, encoded_bits))
+            print(f'Bloque: {block} -> Hamming({n},{m}): {encoded_str}')
+            hamming_codes.append(encoded_str)
+        
+        # Concatenar todos los códigos Hamming en una sola línea binaria
+        final_message = ''.join(hamming_codes)
+        print(f'Mensaje final codificado en una línea binaria: {final_message}')
     
-    # Encodificar cada código ASCII con Hamming
-    hamming_codes = []
-    for ascii_code in ascii_codes:
-        data_bits = trans_bitstr_to_list(ascii_code)
-        encoded_bits = hamming_encode(data_bits)
-        encoded_str = ''.join(map(str, encoded_bits))
-        print(f'ASCII: {ascii_code} -> Hamming(11,7): {encoded_str}')
-        hamming_codes.append(encoded_str)
-    
-    # Concatenar todos los códigos Hamming en una sola línea binaria
-    final_message = ''.join(hamming_codes)
-    print(f'Mensaje final codificado en una línea binaria: {final_message}')
+    elif option == "2":
+        # Lógica para Fletcher Checksum (por el momento, continuar o pasar)
+        pass
