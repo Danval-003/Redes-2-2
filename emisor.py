@@ -1,18 +1,42 @@
-import numpy as np
 from typing import List
+
+def ParityBits(index, r):
+    # Verificar si el número es una potencia de 2
+    if (index & (index - 1)) == 0:
+        return []
+
+    binaryIndex = [0] * r
+    for i in range(r):
+        binaryIndex[i] = (index >> i) & 1
+
+    binaryIndex.reverse()
+    return binaryIndex
+
 
 def hamming_encode(data_bits: List[int], n: int, r: int) -> List[int]:
     # Initialize parity bits
     p = [0] * r
     
-    # Calculate parity bits
-    for i in range(r):
-        parity_position = 2 ** i
-        parity_value = 0
-        for j in range(1, n + 1):
-            if j & parity_position != 0 and (j - 1) < len(data_bits):
-                parity_value ^= data_bits[j - 1]
-        p[i] = parity_value
+    combine = []
+    ind = 0
+    for i in range(n+1):
+        if (i & (i - 1)) == 0:
+            combine.append(0)
+        else:
+            print(data_bits[ind], end='')
+            combine.append(data_bits[ind])
+            ind += 1
+    print()
+    
+    
+    for i in range(len(combine)):
+        bits = ParityBits(i, r)
+        for j in range(len(bits)):
+            p[j] += bits[j] * combine[i]
+            p[j] %= 2
+    
+        
+    print(p)
     
     # Combine data and parity bits
     encoded = []
@@ -45,6 +69,15 @@ def find_optimal_hamming_parameters(m: int):
         r += 1
     n = m + r
     return n, r
+
+def fletcher16(data: str) -> str:
+    c1, c2 = 0, 0
+    for char in data:
+        c1 = (c1 + int(char)) % 255
+        c2 = (c2 + c1) % 255
+    checksum1 = c1 % 255
+    checksum2 = c2 % 255
+    return f"{checksum1:08b}{checksum2:08b}"
 
 # Main program
 if __name__ == "__main__":
@@ -85,5 +118,7 @@ if __name__ == "__main__":
         print(f'Mensaje final codificado en una línea binaria: {final_message}')
     
     elif option == "2":
-        # Lógica para Fletcher Checksum (por el momento, continuar o pasar)
-        pass
+        fletcher_checksum = fletcher16(binary_message)
+        print(f'Fletcher Checksum: {fletcher_checksum}')
+        final_message = binary_message + fletcher_checksum
+        print(f'Mensaje final con checksum: {final_message}')
