@@ -70,14 +70,17 @@ def find_optimal_hamming_parameters(m: int):
     n = m + r
     return n, r
 
-def fletcher16(data: str) -> str:
-    c1, c2 = 0, 0
+def fletcher8(data: str) -> str:
+    sum1, sum2 = 0, 0
     for char in data:
-        c1 = (c1 + int(char)) % 255
-        c2 = (c2 + c1) % 255
-    checksum1 = c1 % 255
-    checksum2 = c2 % 255
-    return f"{checksum1:08b}{checksum2:08b}"
+        sum1 = (sum1 + int(char)) % 15  # Limitar a 15 (4 bits)
+        sum2 = (sum2 + sum1) % 15  # Limitar a 15 (4 bits)
+    checksum = (sum2 << 4) | sum1  # 4 bits para cada parte
+    return f"{checksum:08b}"
+
+def pad_message(message: str, block_size: int = 8) -> str:
+    padding_length = (block_size - len(message) % block_size) % block_size
+    return message + '0' * padding_length
 
 # Main program
 if __name__ == "__main__":
@@ -118,7 +121,13 @@ if __name__ == "__main__":
         print(f'Mensaje final codificado en una línea binaria: {final_message}')
     
     elif option == "2":
-        fletcher_checksum = fletcher16(binary_message)
+        padded_message = pad_message(binary_message, 8)
+        print(f'Mensaje con padding: {padded_message}')
+        
+        # Calcular el checksum
+        fletcher_checksum = fletcher8(padded_message)
         print(f'Fletcher Checksum: {fletcher_checksum}')
-        final_message = binary_message + fletcher_checksum
+        
+        # Combinar mensaje y checksum
+        final_message = padded_message + fletcher_checksum
         print(f'Mensaje final con checksum: {final_message}')
