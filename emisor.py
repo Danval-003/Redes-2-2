@@ -1,44 +1,85 @@
-from typing import List
+from typing import List, Tuple
 
-def ParityBits(index, r):
-    # Verificar si el número es una potencia de 2
+# Function to verify if the binary string is valid and convert to blocks of 8 bits
+def verify8BitsBlocks(binary: str) -> Tuple[List[Tuple[int, int, int, int, int, int, int, int]], str]:
+    binary2 = binary.replace(' ', '').replace('\n', '')
+    blocks = []
+    for i in range(0, len(binary2), 8):
+        block = binary2[i:i+8]
+        blocks.append((
+            int(block[0]),
+            int(block[1]),
+            int(block[2]),
+            int(block[3]),
+            int(block[4]),
+            int(block[5]),
+            int(block[6]),
+            int(block[7])
+        ))
+    return blocks, binary2
+
+# Function to convert Tuple to int
+def tupleToInt(block: Tuple[int, int, int, int, int, int, int, int]) -> int:
+    return int(''.join([str(bit) for bit in block]), 2)
+
+# Function to operate the Fletcher checksum
+def fletcher(blocks: List[Tuple[int, int, int, int, int, int, int, int]]) -> int:
+    sum1, sum2 = 0, 0
+    for block in blocks:
+        number = tupleToInt(block)
+        sum1 = (sum1 + number) % 255
+        sum2 = (sum2 + sum1) % 255
+    checksum = (sum2 << 4) | (sum1 & 0x0F)
+    checksum = checksum & 0xFF
+    return checksum
+
+# Function to convert int to binary on 8 bits
+def intToBinary8Bits(number: int) -> str:
+    number = number % 256
+    binary = bin(number)[2:]
+    if len(binary) < 8:
+        binary = '0' * (8 - len(binary)) + binary
+    return binary
+
+# Function to convert binary to string
+def binaryToString(binary: str) -> str:
+    string = ''
+    for i in range(0, len(binary), 8):
+        block = binary[i:i+8]
+        string += chr(int(block, 2))
+    return string
+
+# Function to calculate parity bits
+def ParityBits(index: int, r: int) -> List[int]:
     if (index & (index - 1)) == 0:
         return []
-
     binaryIndex = [0] * r
     for i in range(r):
         binaryIndex[i] = (index >> i) & 1
-
     binaryIndex.reverse()
     return binaryIndex
 
-
+# Function to encode data with Hamming
 def hamming_encode(data_bits: List[int], n: int, r: int) -> List[int]:
-    # Initialize parity bits
     p = [0] * r
-    
     combine = []
     ind = 0
     for i in range(n+1):
         if (i & (i - 1)) == 0:
             combine.append(0)
         else:
-            print(data_bits[ind], end='')
             combine.append(data_bits[ind])
             ind += 1
-    print()
-    
     
     for i in range(len(combine)):
         bits = ParityBits(i, r)
         for j in range(len(bits)):
             p[j] += bits[j] * combine[i]
             p[j] %= 2
+
+    # Print parity bits
+    print(f'Bits de paridad: {p}')
     
-        
-    print(p)
-    
-    # Combine data and parity bits
     encoded = []
     j = 0
     for i in range(1, n + 1):
@@ -49,19 +90,11 @@ def hamming_encode(data_bits: List[int], n: int, r: int) -> List[int]:
             if (i - j - 1) < len(data_bits):
                 encoded.append(data_bits[i - j - 1])
             else:
-                encoded.append(0)  # Padding if data_bits are exhausted
+                encoded.append(0)
     return encoded
 
 def trans_bitstr_to_list(bitstr: str) -> List[int]:
-    bits = []
-    for c in bitstr:
-        if c == '1':
-            bits.append(1)
-        elif c == '0':
-            bits.append(0)
-        else:
-            exit(f'Invalid character {c} in message')
-    return bits
+    return [int(c) for c in bitstr if c in '01']
 
 def find_optimal_hamming_parameters(m: int):
     r = 1
@@ -70,44 +103,37 @@ def find_optimal_hamming_parameters(m: int):
     n = m + r
     return n, r
 
-def fletcher8(data: str) -> str:
-    sum1, sum2 = 0, 0
-    for char in data:
-        sum1 = (sum1 + int(char)) % 15  # Limitar a 15 (4 bits)
-        sum2 = (sum2 + sum1) % 15  # Limitar a 15 (4 bits)
-    checksum = (sum2 << 4) | sum1  # 4 bits para cada parte
-    return f"{checksum:08b}"
-
 def pad_message(message: str, block_size: int = 8) -> str:
     padding_length = (block_size - len(message) % block_size) % block_size
     return message + '0' * padding_length
 
-# Main program
-if __name__ == "__main__":
-    # Solicitar un mensaje en binario
-    binary_message = input("Ingrese un mensaje en binario (solo unos y ceros): ")
-    if not all(c in '01' for c in binary_message):
+def stringToBinary(string: str) -> str:
+    binary = ''
+    for char in string:
+        charBinary = bin(ord(char))[2:]
+        if len(charBinary) < 8:
+            charBinary = '0' * (8 - len(charBinary)) + charBinary
+        binary += charBinary
+    return binary
+
+def main():
+    message = input("Ingrese un mensaje en binario (solo unos y ceros): ")
+    if not all(c in '01' for c in message):
         exit("El mensaje debe contener solo '0' y '1'.")
 
-    # Solicitar opción de código a aplicar
     print("Seleccione el tipo de código a aplicar:")
     print("1. Hamming(n,m)")
     print("2. Fletcher Checksum")
     option = input("Ingrese 1 o 2: ")
     
     if option == "1":
-        # Obtener la longitud de la entrada binaria
-        m = len(binary_message)
-        
-        # Calcular los valores óptimos de n y r
+        m = len(message)
         n, r = find_optimal_hamming_parameters(m)
         print(f'Valores óptimos: n = {n}, m = {m}, r = {r}')
         
-        # Dividir el mensaje en bloques de m bits
-        blocks = [binary_message[i:i+m] for i in range(0, len(binary_message), m)]
+        blocks = [message[i:i+m] for i in range(0, len(message), m)]
         print(f'Bloques de {m} bits: {blocks}')
         
-        # Encodificar cada bloque con Hamming
         hamming_codes = []
         for block in blocks:
             data_bits = trans_bitstr_to_list(block)
@@ -116,18 +142,20 @@ if __name__ == "__main__":
             print(f'Bloque: {block} -> Hamming({n},{m}): {encoded_str}')
             hamming_codes.append(encoded_str)
         
-        # Concatenar todos los códigos Hamming en una sola línea binaria
         final_message = ''.join(hamming_codes)
         print(f'Mensaje final codificado en una línea binaria: {final_message}')
     
     elif option == "2":
-        padded_message = pad_message(binary_message, 8)
+        padded_message = pad_message(message, 8)
         print(f'Mensaje con padding: {padded_message}')
         
-        # Calcular el checksum
-        fletcher_checksum = fletcher8(padded_message)
-        print(f'Fletcher Checksum: {fletcher_checksum}')
+        blocks, _ = verify8BitsBlocks(padded_message)
+        fletcher_checksum = fletcher(blocks)
+        print(f'Bloques de 8 bits: {blocks}')
+        print(f'Fletcher Checksum: {intToBinary8Bits(fletcher_checksum)}')
         
-        # Combinar mensaje y checksum
-        final_message = fletcher_checksum + padded_message
+        final_message = intToBinary8Bits(fletcher_checksum) + padded_message
         print(f'Mensaje final con checksum: {final_message}')
+
+if __name__ == '__main__':
+    main()
