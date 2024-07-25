@@ -8,19 +8,14 @@
 using namespace std;
 
 std::string translateBits(const std::vector<int>& bits) {
-    std::string message;
+    std::string message = "";
 
-    if (bits.size() % 8 != 0) {
-        std::cerr << redShell << "Error: La longitud de la lista de bits debe ser múltiplo de 8." << resetShell << std::endl;
-        return "";
-    }
-
-    for (size_t i = 0; i < bits.size(); i += 8) {
-        std::bitset<8> bitset;
-        for (size_t j = 0; j < 8; ++j) {
-            bitset[7 - j] = bits[i + j];
+    for (size_t i = 0; i < bits.size(); i ++) {
+        if (bits[i] == 0){
+            message += "0";
+        } else {
+            message += "1";
         }
-        message += static_cast<char>(bitset.to_ulong());
     }
 
     return message;
@@ -118,6 +113,8 @@ string DecoHammingMtoNToBinary(const string& binaryInitStr) {
     }
 
     cout << greenShell << "Not has been detected any error" << resetShell << endl;
+    // Size of the message
+    cout << "The size of the message is: " << dataBits.size() << endl;
     cout << endl;
 
     string decodedMessage = translateBits(dataBits);

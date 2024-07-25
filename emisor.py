@@ -1,5 +1,15 @@
 from typing import List, Tuple
 
+class colors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    ENDC = '\033[0m'
+
 # Function to verify if the binary string is valid and convert to blocks of 8 bits
 def verify8BitsBlocks(binary: str) -> Tuple[List[Tuple[int, int, int, int, int, int, int, int]], str]:
     binary2 = binary.replace(' ', '').replace('\n', '')
@@ -132,30 +142,30 @@ def main():
         print(f'Valores óptimos: n = {n}, m = {m}, r = {r}')
         
         blocks = [message[i:i+m] for i in range(0, len(message), m)]
-        print(f'Bloques de {m} bits: {blocks}')
+        print(f'Bloques de {m} bits: {colors.BOLD+colors.OKBLUE} {blocks} {colors.ENDC}')
         
         hamming_codes = []
         for block in blocks:
             data_bits = trans_bitstr_to_list(block)
             encoded_bits = hamming_encode(data_bits, n, r)
             encoded_str = ''.join(map(str, encoded_bits))
-            print(f'Bloque: {block} -> Hamming({n},{m}): {encoded_str}')
+            print(f'Bloque: {block} -> Hamming({n},{m}): {colors.BOLD+colors.OKBLUE} {encoded_str} {colors.ENDC}')
             hamming_codes.append(encoded_str)
         
         final_message = ''.join(hamming_codes)
-        print(f'Mensaje final codificado en una línea binaria: {final_message}')
+        print(f'Mensaje final codificado en una línea binaria: {colors.BOLD+colors.OKGREEN} {final_message} {colors.ENDC}')
     
     elif option == "2":
         padded_message = pad_message(message, 8)
-        print(f'Mensaje con padding: {padded_message}')
+        print(f'Mensaje con padding: {colors.BOLD+colors.OKBLUE}{padded_message} {colors.ENDC}')
         
         blocks, _ = verify8BitsBlocks(padded_message)
         fletcher_checksum = fletcher(blocks)
         print(f'Bloques de 8 bits: {blocks}')
-        print(f'Fletcher Checksum: {intToBinary8Bits(fletcher_checksum)}')
+        print(f'Fletcher Checksum: {colors.BOLD+colors.OKBLUE}{intToBinary8Bits(fletcher_checksum)} {colors.ENDC}')
         
         final_message = intToBinary8Bits(fletcher_checksum) + padded_message
-        print(f'Mensaje final con checksum: {final_message}')
+        print(f'Mensaje final con checksum:{colors.BOLD+colors.OKGREEN} {final_message} {colors.ENDC}')
 
 if __name__ == '__main__':
     main()

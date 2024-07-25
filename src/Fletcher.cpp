@@ -52,27 +52,14 @@ string NumberToBinary(int number) {
 std::string translateBits8(const std::vector<int>& bits) {
     std::string message;
 
-    // Asegúrate de que la longitud de bits es múltiplo de 8
-    if (bits.size() % 8 != 0) {
-        std::cerr << redShell2 << "Error: La longitud de la lista de bits debe ser múltiplo de 8." << resetShell2 << std::endl;
-        return "";
-    }
-
     // Iterar sobre la lista de bits en grupos de 8 bits
-    for (size_t i = 0; i < bits.size(); i += 8) {
-        std::bitset<8> bitset;
-
-        // Llenar el bitset con los 8 bits correspondientes
-        for (size_t j = 0; j < 8; ++j) {
-            bitset[7 - j] = bits[i + j];  // Establecer el bit en la posición correcta
+    for (size_t i = 0; i < bits.size(); i ++) {
+        if(bits[i] == 0){
+            message += "0";
+        } else {
+            message += "1";
         }
-
-        // Convertir el número binario a un carácter y agregarlo al mensaje
-        message += static_cast<char>(bitset.to_ulong());
     }
-
-    std::cout << "letter: " << blueShell2 << message << resetShell2 << std::endl;
-    
     return message;
 }
 
@@ -111,6 +98,7 @@ string DecoFletchertoString(const string& binary) {
     cout << "The sum2 is: " << sum2 << endl;
 
     int checksum = (sum2 << 4) | (sum1 & 0x0F);
+
     checksum = checksum & 0xFF;
     cout << "The checksum is: " << checksum << endl;
 
