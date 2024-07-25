@@ -129,5 +129,5 @@ if __name__ == "__main__":
         print(f'Fletcher Checksum: {fletcher_checksum}')
         
         # Combinar mensaje y checksum
-        final_message = padded_message + fletcher_checksum
+        final_message = fletcher_checksum + padded_message
         print(f'Mensaje final con checksum: {final_message}')
