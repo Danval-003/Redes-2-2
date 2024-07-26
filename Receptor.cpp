@@ -15,6 +15,11 @@ int main(){
     while (true)
     {
         cout << "---------------------------------------------------------------------" << endl;
+        string binary;
+        cout << "Enter the binary message: ";
+        cin >> binary;
+        cout << "---------------------------------------------------------------------" << endl;
+
         cout << "What do you want to do?" << endl;
         cout << "1. Use Hamming" << endl;
         cout << "2. Use Fletcher" << endl;
@@ -27,15 +32,11 @@ int main(){
             break;
         }
 
-        string binary;
-
         switch (option)
         
         {
         case 1:
             {
-                cout << "Enter the binary message: ";
-                cin >> binary;
                 string message = DecoHammingMtoNToBinary(binary);
                 cout << "The message is: " << blueShell << message << resetShell << endl;
                 cout << endl;
@@ -45,10 +46,12 @@ int main(){
 
         case 2:
             {
-                cout << "Enter the binary message: ";
-                cin >> binary;
                 string message = DecoFletchertoString(binary);
-                cout << "The message is: " << greenShell << message << resetShell << endl;
+                if (message != "") {
+                    cout << "The message is: " << greenShell << message << resetShell << endl;
+                } else {
+                    cout << redShell << "The message has been rejected" << resetShell << endl;
+                }
                 cout << endl;
             }
         

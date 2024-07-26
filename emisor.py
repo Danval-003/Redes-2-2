@@ -1,5 +1,7 @@
 from typing import List, Tuple
 
+import numpy as np
+
 class colors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -59,49 +61,52 @@ def binaryToString(binary: str) -> str:
         string += chr(int(block, 2))
     return string
 
-# Function to calculate parity bits
+
 def ParityBits(index: int, r: int) -> List[int]:
+    # Verify if the number is a power of 2
     if (index & (index - 1)) == 0:
-        return []
-    binaryIndex = [0] * r
+        return [0] * r
+
+    binary_index = [0] * r
     for i in range(r):
-        binaryIndex[i] = (index >> i) & 1
-    binaryIndex.reverse()
-    return binaryIndex
+        binary_index[i] = (index >> i) & 1
+    return binary_index
 
-# Function to encode data with Hamming
-def hamming_encode(data_bits: List[int], n: int, r: int) -> List[int]:
-    p = [0] * r
-    combine = []
-    ind = 0
-    for i in range(n+1):
-        if (i & (i - 1)) == 0:
-            combine.append(0)
-        else:
-            combine.append(data_bits[ind])
-            ind += 1
-    
-    for i in range(len(combine)):
-        bits = ParityBits(i, r)
-        for j in range(len(bits)):
-            p[j] += bits[j] * combine[i]
-            p[j] %= 2
+def generate_hamming_generator_matrix(k: int):
+    # Calculate number of parity bits needed
+    r = 0
+    while (k + r + 1) > (2 ** r):
+        r += 1
+    n = k + r
 
-    # Print parity bits
-    print(f'Bits de paridad: {p}')
+    # Create identity matrix I_k
+    I_k = np.eye(k, dtype=int)
     
-    encoded = []
-    j = 0
+    # Create matrix A
+    A = []
     for i in range(1, n + 1):
-        if i == 2 ** j:
-            encoded.append(p[j])
-            j += 1
-        else:
-            if (i - j - 1) < len(data_bits):
-                encoded.append(data_bits[i - j - 1])
-            else:
-                encoded.append(0)
-    return encoded
+        if (i & (i - 1)) != 0:  # Check if not power of 2
+            binary_representation = ParityBits(i, r)
+            A.append(binary_representation)
+    A = np.array(A).T  # Transpose to get the correct shape
+    
+    # Create generator matrix G
+    G = np.concatenate((I_k, -A.T % 2), axis=1)
+    
+    return G
+
+def hamming_encode(data_bits: List[int], n, r) -> List[int]:
+    k = len(data_bits)
+    # Generate the generator matrix G
+    G = generate_hamming_generator_matrix(k)
+    
+    # Convert data bits to a numpy array
+    data_bits_array = np.array(data_bits).reshape(1, -1)
+    
+    # Encode data bits using generator matrix G
+    encoded_bits = np.dot(data_bits_array, G) % 2
+    
+    return encoded_bits.flatten().tolist()
 
 def trans_bitstr_to_list(bitstr: str) -> List[int]:
     return [int(c) for c in bitstr if c in '01']
