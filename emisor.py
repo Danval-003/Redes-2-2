@@ -105,8 +105,23 @@ def hamming_encode(data_bits: List[int], n, r) -> List[int]:
     
     # Encode data bits using generator matrix G
     encoded_bits = np.dot(data_bits_array, G) % 2
-    
-    return encoded_bits.flatten().tolist()
+    parityBitsList = encoded_bits[0][k:]
+    # Result 
+    result = []
+    countK = 0
+    countR = 0
+    for j in range(k + r):
+        i = j + 1
+        if (i & (i - 1)) == 0:
+            result.append(parityBitsList[countR])
+            countR += 1
+            print(i, countR)
+        else:
+            result.append(data_bits[countK])
+            countK += 1
+
+
+    return result
 
 def trans_bitstr_to_list(bitstr: str) -> List[int]:
     return [int(c) for c in bitstr if c in '01']
@@ -130,6 +145,23 @@ def stringToBinary(string: str) -> str:
             charBinary = '0' * (8 - len(charBinary)) + charBinary
         binary += charBinary
     return binary
+
+
+import socket
+
+def sender(message: str):
+    # Crear un socket
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Conectar al servidor
+    server_address = ('localhost', 9000)
+    client_socket.connect(server_address)
+
+    # Enviar un string
+    client_socket.send(message.encode('utf-8'))
+
+    # Cerrar el socket
+    client_socket.close()
 
 def main():
     message = input("Ingrese un mensaje en binario (solo unos y ceros): ")
@@ -159,6 +191,8 @@ def main():
         
         final_message = ''.join(hamming_codes)
         print(f'Mensaje final codificado en una línea binaria: {colors.BOLD+colors.OKGREEN} {final_message} {colors.ENDC}')
+        sender(final_message)
+        print('Mensaje enviado al receptor')
     
     elif option == "2":
         padded_message = pad_message(message, 8)
@@ -171,6 +205,9 @@ def main():
         
         final_message = intToBinary8Bits(fletcher_checksum) + padded_message
         print(f'Mensaje final con checksum:{colors.BOLD+colors.OKGREEN} {final_message} {colors.ENDC}')
+        sender(final_message)
+        print('Mensaje enviado al receptor')
+
 
 if __name__ == '__main__':
     main()
