@@ -4,6 +4,7 @@
 #include <sstream>
 #include <iomanip>
 #include <bitset>
+#include "../include/Fletcher.h"
 
 using namespace std;
 const string redShell2 = "\033[1;31m";
@@ -17,7 +18,7 @@ vector<int*> evalBinaryMessage8(const string& binaryInitStr) {
 
     // Verifica si el tamaño del mensaje binario es múltiplo de 8
     if (binaryInitSize % 8 != 0) {
-        cout << "The binary message is not a multiple of 8" << endl;
+        //cout << "The binary message is not a multiple of 8" << endl;
         return binaryBlocks;
     }
 
@@ -94,22 +95,24 @@ string DecoFletchertoString(const string& binary) {
         message += translateBits8(vector<int>(binary, binary + 8));
     }
 
-    cout << "The sum1 is: " << sum1 << endl;
-    cout << "The sum2 is: " << sum2 << endl;
+    //cout << "The sum1 is: " << sum1 << endl;
+    //cout << "The sum2 is: " << sum2 << endl;
 
     int checksum = (sum2 << 4) | (sum1 & 0x0F);
 
     checksum = checksum & 0xFF;
-    cout << "The checksum is: " << checksum << endl;
+    //cout << "The checksum is: " << checksum << endl;
 
     // Verify if the checksum is equal of the first block
     if (firstBlockValue != checksum) {
-        cout << redShell2 << "The checksum is not equal to the first block" << resetShell2 << endl;
+        //cout << redShell2 << "The checksum is not equal to the first block" << resetShell2 << endl;
         return "";
     }
 
-    cout << greenShell2 << "The checksum is equal to the first block" << resetShell2 << endl;
+    //cout << greenShell2 << "The checksum is equal to the first block" << resetShell2 << endl;
 
-    // 
+    // Delete first 8 characters on binary message
+    message = binary.substr(8);
+    
     return message;
 }
